@@ -63,3 +63,5 @@ function showElement(element) {
 function hideElement(element) {
     element.style.display = "none"
 }
+
+//credit: coursera
