@@ -6,6 +6,9 @@ import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebase
 import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js"
 import { signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js"
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js"
+import { getFirestore } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js"
+import { collection, addDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+import { updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
 /* === Firebase Setup === */
 
@@ -19,6 +22,10 @@ const firebaseConfig = {
 }
 const app = initializeApp(firebaseConfig)
 const auth = getAuth(app)
+// Initialize Cloud Firestore and get a reference to the service
+const db = getFirestore(app);
+// test if it works
+console.log(db)
 console.log(auth)
 console.log(app.options.projectId)
 
@@ -44,6 +51,9 @@ const userProfilePictureEl = document.getElementById("user-profile-picture")
 // for displaying the name
 const userGreetingEl = document.getElementById("user-greeting")
 
+const textareaEl = document.getElementById("post-input")
+const postButtonEl = document.getElementById("post-btn")
+
 /* == UI - Event Listeners == */
 
 signInWithGoogleButtonEl.addEventListener("click", authSignInWithGoogle)
@@ -52,6 +62,8 @@ signInButtonEl.addEventListener("click", authSignInWithEmail)
 createAccountButtonEl.addEventListener("click", authCreateAccountWithEmail)
 
 signOutButtonEl.addEventListener("click", authSignOut)
+
+postButtonEl.addEventListener("click", postButtonPressed)
 
 /* === Main Code === */
 
@@ -117,7 +129,32 @@ function authSignOut() {
     })
 }
 
+/* = Functions - Firebase - Cloud Firestore = */
+
+async function addPostToDB(postBody, user) {
+    try {
+        const docRef = await addDoc(collection(db, "posts"), {
+            body: postBody,
+            uid: user.uid,
+            createdAt: serverTimestamp()
+        });
+        console.log("Document written with ID: ", docRef.id);
+    } catch (e) {
+        console.error("Error adding document: ", e);
+    }
+} 
+
 /* == Functions - UI Functions == */
+
+function postButtonPressed() {
+    const postBody = textareaEl.value
+    const user = auth.currentUser
+   
+    if (postBody) {
+        addPostToDB(postBody, user)
+        clearInputField(textareaEl)
+    }
+} 
 
 function showLoggedOutView() {
     hideView(viewLoggedIn)
